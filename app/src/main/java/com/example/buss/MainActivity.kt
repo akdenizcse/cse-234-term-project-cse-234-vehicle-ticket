@@ -8,8 +8,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
@@ -31,13 +30,14 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +50,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -61,15 +62,16 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavController
-import androidx.navigation.Navigator
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.buss.ui.theme.BBlackLight
 import com.example.buss.ui.theme.BBlue
 import com.example.buss.ui.theme.BLightGrey
 import com.example.buss.ui.theme.BNeonDarkBlue
@@ -95,7 +97,7 @@ class MainActivity : ComponentActivity() {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = Color.White
                 ) {
                     val navController = rememberNavController()
 
@@ -158,8 +160,18 @@ fun TopBox(navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignNavigation(navController: NavController) {
+    var signInColor by remember {
+        mutableStateOf(BNeonDarkBlue)
+    }
+    var signUpColor by remember {
+        mutableStateOf( BBlackLight)
+    }
+    val colors = TextFieldDefaults.colors(
+        focusedIndicatorColor = BNeonDarkBlue,)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,17 +185,19 @@ fun SignNavigation(navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 fontStyle = FontStyle.Normal,
                 fontSize = 20.sp,
-                color = BLightGrey
+                color = signInColor
             ),
             modifier = Modifier
                 .padding(
                     top = 10.dp,
                     start = 20.dp,
-                    end = 20.dp,
+                    end = 30.dp,
                     bottom = 10.dp
                 ),
             onClick = {
                 navController.navigate("login")
+                signUpColor = BBlackLight
+                signInColor = BNeonDarkBlue
             },
         )
         ClickableText(
@@ -192,17 +206,19 @@ fun SignNavigation(navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 fontStyle = FontStyle.Normal,
                 fontSize = 20.sp,
-                color = BLightGrey
+                color = signUpColor
             ),
             modifier = Modifier
                 .padding(
                     top = 10.dp,
-                    start = 20.dp,
+                    start = 30.dp,
                     end = 20.dp,
                     bottom = 10.dp
                 ),
             onClick = {
                 navController.navigate("signup")
+                signUpColor = BNeonDarkBlue
+                signInColor = BBlackLight
             },
         )
 
@@ -232,12 +248,7 @@ fun Login(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Top),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_launcher_foreground),
-            null,
-            Modifier.size(80.dp),
-            tint = Color.White
-        )
+
         TextInput(InputType.Name, keyboardActions = KeyboardActions(onNext = {
             passwordFocusRequester.requestFocus()
         }))
@@ -245,6 +256,23 @@ fun Login(navController: NavController) {
             focusManager.clearFocus()
             context.doLogin()
         }), focusRequester = passwordFocusRequester)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            TextButton(modifier = Modifier.weight(1f),
+                onClick = {
+
+                }) {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        "Continue without signing up.",
+                        color = BLightGrey,
+                        textAlign = TextAlign.Left
+                    )
+                }
+            }
+            TextButton(onClick = {}) {
+                Text("Forgot Password?" , color = BBlue, textAlign = TextAlign.Right)
+            }
+        }
         Button(
             onClick = {
                 context.doLogin()
@@ -252,17 +280,37 @@ fun Login(navController: NavController) {
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = BNeonDarkBlue),
         ) {
-            Text("SIGN IN", Modifier.padding(vertical = 8.dp), fontWeight = FontWeight.ExtraBold)
+            Text(
+                "SIGN IN",
+                Modifier.padding(vertical = 8.dp),
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 16.sp
+            )
         }
-        Divider(
-            color = Color.White.copy(alpha = 0.3f),
-            thickness = 1.dp,
-            modifier = Modifier.padding(top = 48.dp)
+        Text(
+            text = "Or sign in with",
+            color = BBlackLight,
+            modifier = Modifier.padding(top = 16.dp, end = 10.dp),
+            fontWeight = FontWeight.Bold
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Don't have an account?", color = Color.White)
-            TextButton(onClick = {}) {
-                Text("SING UP")
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Image(
+                    painterResource(R.drawable.facebook),
+                    contentDescription = "",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.padding(end = 10.dp)
+                )
+                Image(
+                    painterResource(R.drawable.google),
+                    contentDescription = "",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
             }
         }
     }
