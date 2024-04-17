@@ -167,10 +167,11 @@ fun SignNavigation(navController: NavController) {
         mutableStateOf(BNeonDarkBlue)
     }
     var signUpColor by remember {
-        mutableStateOf( BBlackLight)
+        mutableStateOf(BBlackLight)
     }
     val colors = TextFieldDefaults.colors(
-        focusedIndicatorColor = BNeonDarkBlue,)
+        focusedIndicatorColor = BNeonDarkBlue,
+    )
 
     Row(
         modifier = Modifier
@@ -270,7 +271,7 @@ fun Login(navController: NavController) {
                 }
             }
             TextButton(onClick = {}) {
-                Text("Forgot Password?" , color = BBlue, textAlign = TextAlign.Right)
+                Text("Forgot Password?", color = BBlue, textAlign = TextAlign.Right)
             }
         }
         Button(
