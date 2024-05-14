@@ -7,14 +7,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRowScopeInstance.align
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -48,6 +53,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
@@ -91,13 +99,16 @@ fun SearchBox() {
             .fillMaxSize()
             .clip(shape = RoundedCornerShape(35.dp, 35.dp, 0.dp, 0.dp))
             .background(Color.White)
-            .height(50.dp),
+            .height(50.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(0.9f)
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .padding(top = 35.dp)
         ) {
 
             SearchCard("Origin", Modifier.weight(1f))
@@ -260,12 +271,86 @@ fun SearchBox() {
                     colors = DatePickerDefaults.colors(
                         selectedDayContentColor = Color.White,
                         selectedDayContainerColor = BLightGrey,
-                        )
+                    )
                 )
             }
 
         }
+        RecommendationCards()
+
+
     }
+}
+
+@Composable
+fun RecommendationCards() {
+
+    Spacer(modifier = Modifier.height(10.dp))
+
+    Text(
+        text = "Recommendations",
+        color = BLightGrey,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold
+    )
+    Spacer(modifier = Modifier.height(10.dp))
+
+    ImageCard("Istanbul", R.drawable.istanbul)
+    Spacer(modifier = Modifier.height(10.dp))
+    ImageCard(cityName = "Antalya", imageResId = R.drawable.antalya)
+    Spacer(modifier = Modifier.height(10.dp))
+    ImageCard(cityName = "Ankara", imageResId = R.drawable.ankara)
+    Spacer(modifier = Modifier.height(10.dp))
+    ImageCard(cityName = "Izmir", imageResId = R.drawable.izmir)
+    Spacer(modifier = Modifier.height(10.dp))
+    ImageCard(cityName = "Bursa", imageResId = R.drawable.bursa)
+
+}
+
+@Composable
+fun ImageCard(cityName: String, imageResId: Int) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .background(Color.White)
+            .padding(8.dp)
+            .clip(RoundedCornerShape(10.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(id = imageResId),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
+
+        Text(
+            text = cityName,
+            style = TextStyle(
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 70.sp,
+            ),
+            color = Color.DarkGray,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .offset(x = 2.dp, y = 2.dp)
+                .alpha(0.2f)
+        )
+        Text(
+            text = cityName,
+            style = TextStyle(
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 70.sp,
+            ),
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .alpha(0.7f)
+        )
+    }
+
 }
 
 @Composable
