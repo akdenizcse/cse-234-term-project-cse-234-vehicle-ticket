@@ -76,8 +76,10 @@ import com.example.buss.ui.theme.BBlue
 import com.example.buss.ui.theme.BLightGrey
 import com.example.buss.ui.theme.BNeonDarkBlue
 import com.example.buss.ui.theme.BussTheme
+import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -93,28 +95,30 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+                var selectedDate by remember { mutableStateOf(LocalDate.now()) }
             BussTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
                 ) {
-                    val navController = rememberNavController()
-
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        TopBox(navController)
-                        NavHost(navController = navController, startDestination = "login") {
-                            composable("login") {
-                                Login(navController)
-                            }
-                            composable("signup") {
-                                SignUp(navController)
-                            }
-                        }
-                    }
+                    Home()
+//                    val navController = rememberNavController()
+//
+//                    Column(
+//                        modifier = Modifier.fillMaxSize(),
+//                        horizontalAlignment = Alignment.CenterHorizontally,
+//                    ) {
+//                        TopBox(navController)
+//                        NavHost(navController = navController, startDestination = "login") {
+//                            composable("login") {
+//                                Login(navController)
+//                            }
+//                            composable("signup") {
+//                                SignUp(navController)
+//                            }
+//                        }
+//                    }
 
                 }
             }
