@@ -20,5 +20,6 @@ val BDarkWhite = Color(0xFFB6B6B6)
 val BNeonBlue = Color(0xFF00FFD1)
 val BNeonDarkBlue = Color(0xFF00B2FF)
 val BBlackLight = Color(0xFF494545)
+val FilterColor = Color(0xFF021141)
 
 

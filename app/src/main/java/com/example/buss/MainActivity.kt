@@ -37,7 +37,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TextFieldDefaults.indicatorLine
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -95,36 +95,50 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-                var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+            var selectedDate by remember { mutableStateOf(LocalDate.now()) }
             BussTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
                 ) {
-                    Home()
-//                    val navController = rememberNavController()
-//
-//                    Column(
-//                        modifier = Modifier.fillMaxSize(),
-//                        horizontalAlignment = Alignment.CenterHorizontally,
-//                    ) {
-//                        TopBox(navController)
-//                        NavHost(navController = navController, startDestination = "login") {
-//                            composable("login") {
-//                                Login(navController)
-//                            }
-//                            composable("signup") {
-//                                SignUp(navController)
-//                            }
-//                        }
-//                    }
+                    val pageControllerNav = rememberNavController()
+
+                    val navController = rememberNavController()
+                    NavHost(navController = pageControllerNav, startDestination = "loginPage") {
+                        composable("loginPage") {
+                            LoginPage(pageControllerNav)
+                        }
+                        composable("homePage") {
+                            Home(pageControllerNav)
+                        }
+                        composable("resultPage") {
+                            ResultPage(pageControllerNav)
+                        }
+                    }
+
 
                 }
             }
         }
     }
 
+
+}
+@Composable
+fun LoginPage( pageNav : NavHostController) {
+    val navController = rememberNavController()
+    Column {
+        TopBox(navController)
+        NavHost(navController = navController, startDestination = "login") {
+            composable("login") {
+                Login(navController, pageNav)
+            }
+            composable("signup") {
+                SignUp(navController, pageNav)
+            }
+        }
+    }
 }
 
 @Composable
@@ -230,17 +244,11 @@ fun SignNavigation(navController: NavController) {
     }
 }
 
-private fun Context.doLogin() {
-    Toast.makeText(
-        this,
-        "Something went wrong, try again later!",
-        Toast.LENGTH_SHORT
-    ).show()
-}
+
 
 
 @Composable
-fun Login(navController: NavController) {
+fun Login(navController: NavController, pageControllerNav: NavHostController) {
     val context = LocalContext.current
     val passwordFocusRequester = FocusRequester()
     val focusManager = LocalFocusManager.current
@@ -259,7 +267,7 @@ fun Login(navController: NavController) {
         }))
         TextInput(InputType.Password, keyboardActions = KeyboardActions(onDone = {
             focusManager.clearFocus()
-            context.doLogin()
+            context.doLogin(pageControllerNav)
         }), focusRequester = passwordFocusRequester)
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             TextButton(modifier = Modifier.weight(1f),
@@ -280,7 +288,7 @@ fun Login(navController: NavController) {
         }
         Button(
             onClick = {
-                context.doLogin()
+                context.doLogin(pageControllerNav)
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = BNeonDarkBlue),
@@ -322,8 +330,13 @@ fun Login(navController: NavController) {
 
 }
 
+private fun Context.doLogin( pageControllerNav: NavHostController) {
+    Toast.makeText(this, "Login", Toast.LENGTH_SHORT).show()
+    pageControllerNav.navigate("homePage")
+}
+
 @Composable
-fun SignUp(navController: NavController) {
+fun SignUp(navController: NavController, pageControllerNav: NavHostController) {
     val context = LocalContext.current
     val passwordFocusRequester = FocusRequester()
     val focusManager = LocalFocusManager.current
@@ -347,11 +360,11 @@ fun SignUp(navController: NavController) {
         }))
         TextInput(InputType.Password, keyboardActions = KeyboardActions(onDone = {
             focusManager.clearFocus()
-            context.doLogin()
+            context.doLogin(pageControllerNav)
         }), focusRequester = passwordFocusRequester)
         Button(
             onClick = {
-                context.doLogin()
+                context.doLogin(pageControllerNav)
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = BNeonDarkBlue),

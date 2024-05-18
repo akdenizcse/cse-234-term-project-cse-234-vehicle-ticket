@@ -1,13 +1,11 @@
 package com.example.buss
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRowScopeInstance.align
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -35,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,17 +51,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
-import com.vanpra.composematerialdialogs.MaterialDialog
+import androidx.navigation.NavHostController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import java.time.LocalDate
 
 
-val globalCounter = mutableStateOf(0)
+var departureCity = mutableStateOf("Antalya")
+val destinationCity = mutableStateOf("Istanbul")
 
+fun departureSetter( text: String = "Istanbul") {
+    departureCity.value = text
+}
+fun destinationSetter( text: String = "Ankara") {
+    destinationCity.value = text
+}
+var _selectedDate by  mutableStateOf(LocalDate.now())
+
+val pageControllerNav = mutableStateOf<NavHostController?>(null)
 @Composable
-fun Home() {
+fun Home(navController: NavHostController) {
+    pageControllerNav.value = navController
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,7 +86,7 @@ fun Home() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchBox() {
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var selectedDate by remember { mutableStateOf(_selectedDate) }
 
     val todayColor = if (selectedDate == LocalDate.now()) {
         BBlue
@@ -88,9 +95,9 @@ fun SearchBox() {
     }
 
     val tomorrowColor = if (selectedDate == LocalDate.now().plusDays(1)) {
-        Color.Blue
+        BBlue
     } else {
-        Color.Gray
+        BLightGrey
     }
     val dateDialogState = rememberMaterialDialogState()
 
@@ -111,7 +118,7 @@ fun SearchBox() {
                 .padding(top = 35.dp)
         ) {
 
-            SearchCard("Origin", Modifier.weight(1f))
+            SearchCard(departureCity.value,"Origin", Modifier.weight(1f))
             Image(
                 painter = painterResource(id = R.drawable.right),
                 contentDescription = "right",
@@ -120,7 +127,7 @@ fun SearchBox() {
                     .padding(10.dp),
                 alignment = Alignment.Center, alpha = 0.4f
             )
-            SearchCard("Destination", Modifier.weight(1f))
+            SearchCard(destinationCity.value,"Destination", Modifier.weight(1f))
         }
         Card(
             onClick = {
@@ -285,7 +292,7 @@ fun SearchBox() {
 @Composable
 fun RecommendationCards() {
 
-    Spacer(modifier = Modifier.height(10.dp))
+    Spacer(modifier = Modifier.height(15.dp))
 
     Text(
         text = "Recommendations",
@@ -312,7 +319,7 @@ fun ImageCard(cityName: String, imageResId: Int) {
 
     Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth( 0.9f)
             .aspectRatio(16f / 9f)
             .background(Color.White)
             .padding(8.dp)
@@ -356,7 +363,7 @@ fun ImageCard(cityName: String, imageResId: Int) {
 @Composable
 fun SearchButton() {
     Button(
-        onClick = { /*TODO*/ },
+        onClick = { pageControllerNav.value?.navigate("resultPage") },
         modifier = Modifier
             .height(80.dp)
             .fillMaxWidth(0.9f)
@@ -402,7 +409,7 @@ fun DayCardButton(
 }
 
 @Composable
-fun SearchCard(text: String, weight: Modifier) {
+fun SearchCard( city : String ,direction: String, weight: Modifier) {
     Card(
         border = BorderStroke(1.dp, BDarkWhite),
         elevation = CardDefaults.cardElevation(10.dp),
@@ -419,14 +426,14 @@ fun SearchCard(text: String, weight: Modifier) {
                 .fillMaxSize()
         ) {
             Text(
-                text = text,
+                text = direction,
                 modifier = Modifier.padding(top = 10.dp),
                 color = BLightGrey,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Antalya",
+                text = city,
                 modifier = Modifier.padding(top = 10.dp, bottom = 15.dp),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
