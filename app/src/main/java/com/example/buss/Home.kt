@@ -1,8 +1,10 @@
 package com.example.buss
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,28 +51,34 @@ import com.example.buss.ui.theme.BLightGrey
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavHostController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 
 var departureCity = mutableStateOf("Antalya")
 val destinationCity = mutableStateOf("Istanbul")
+val isdeparture = mutableStateOf(false)
 
-fun departureSetter( text: String = "Istanbul") {
-    departureCity.value = text
+fun CitySetter(text: String = "Istanbul") {
+    if (isdeparture.value) {
+        departureCity.value = text
+    } else {
+        destinationCity.value = text
+    }
 }
-fun destinationSetter( text: String = "Ankara") {
-    destinationCity.value = text
-}
-var _selectedDate by  mutableStateOf(LocalDate.now())
+
+var _selectedDate by mutableStateOf(LocalDate.now())
 
 val pageControllerNav = mutableStateOf<NavHostController?>(null)
+
 @Composable
-fun Home(navController: NavHostController) {
+fun Home(navController: NavHostController, viewModel: MyViewModel) {
     pageControllerNav.value = navController
     Column(
         modifier = Modifier
@@ -79,13 +87,13 @@ fun Home(navController: NavHostController) {
     )
     {
         TopBox()
-        SearchBox()
+        SearchBox(viewModel)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBox() {
+fun SearchBox(viewModel: MyViewModel) {
     var selectedDate by remember { mutableStateOf(_selectedDate) }
 
     val todayColor = if (selectedDate == LocalDate.now()) {
@@ -118,7 +126,14 @@ fun SearchBox() {
                 .padding(top = 35.dp)
         ) {
 
-            SearchCard(departureCity.value,"Origin", Modifier.weight(1f))
+            SearchCard(
+                departureCity.value,
+                "Origin",
+                Modifier.weight(1f),
+                click = {
+                    isdeparture.value = true
+                    pageControllerNav.value?.navigate("citySelection")
+                })
             Image(
                 painter = painterResource(id = R.drawable.right),
                 contentDescription = "right",
@@ -127,7 +142,14 @@ fun SearchBox() {
                     .padding(10.dp),
                 alignment = Alignment.Center, alpha = 0.4f
             )
-            SearchCard(destinationCity.value,"Destination", Modifier.weight(1f))
+            SearchCard(
+                destinationCity.value,
+                "Destination",
+                Modifier.weight(1f),
+                click = {
+                    isdeparture.value = false
+                    pageControllerNav.value?.navigate("citySelection")
+                })
         }
         Card(
             onClick = {
@@ -218,6 +240,7 @@ fun SearchBox() {
                             .padding(top = 10.dp, bottom = 5.dp),
                         color = todayColor,
                         click = {
+                            _selectedDate = LocalDate.now()
                             selectedDate = LocalDate.now()
                         }
                     )
@@ -228,6 +251,7 @@ fun SearchBox() {
                             .padding(top = 5.dp, bottom = 10.dp),
                         color = tomorrowColor,
                         click = {
+                            _selectedDate = LocalDate.now().plusDays(1)
                             selectedDate = LocalDate.now().plusDays(1)
                         }
                     )
@@ -236,7 +260,7 @@ fun SearchBox() {
 
             }
         }
-        SearchButton()
+        SearchButton(viewModel)
         if (dateDialogState.showing) {
             val datePickerState = rememberDatePickerState()
             val state = rememberDatePickerState(initialDisplayMode = DisplayMode.Input)
@@ -253,6 +277,9 @@ fun SearchBox() {
                             dateDialogState.hide()
                             var date = "no selection"
                             if (datePickerState.selectedDateMillis != null) {
+                                _selectedDate = LocalDate.ofEpochDay(
+                                    datePickerState.selectedDateMillis!! / 86400000
+                                )
                                 selectedDate = LocalDate.ofEpochDay(
                                     datePickerState.selectedDateMillis!! / 86400000
                                 )
@@ -283,6 +310,9 @@ fun SearchBox() {
             }
 
         }
+
+
+
         RecommendationCards()
 
 
@@ -314,12 +344,13 @@ fun RecommendationCards() {
 
 }
 
+
 @Composable
 fun ImageCard(cityName: String, imageResId: Int) {
 
     Box(
         modifier = Modifier
-            .fillMaxWidth( 0.9f)
+            .fillMaxWidth(0.9f)
             .aspectRatio(16f / 9f)
             .background(Color.White)
             .padding(8.dp)
@@ -360,10 +391,29 @@ fun ImageCard(cityName: String, imageResId: Int) {
 
 }
 
+
 @Composable
-fun SearchButton() {
+fun SearchButton(viewModel: MyViewModel) {
+    val coroutineScope = rememberCoroutineScope()
     Button(
-        onClick = { pageControllerNav.value?.navigate("resultPage") },
+        onClick = {
+            Log.d(
+                "${_selectedDate.dayOfMonth}.${_selectedDate.monthValue}.${_selectedDate.year}",
+                "Search Button Clicked"
+            )
+            coroutineScope.launch {
+                viewModel.findTrip(
+                    departureCity.value,
+                    destinationCity.value,
+                    "${_selectedDate.dayOfMonth}.0${_selectedDate.monthValue}.${_selectedDate.year}",
+                    1
+                )
+                pageControllerNav.value?.navigate("resultPage")
+            }
+
+
+
+        },
         modifier = Modifier
             .height(80.dp)
             .fillMaxWidth(0.9f)
@@ -409,7 +459,7 @@ fun DayCardButton(
 }
 
 @Composable
-fun SearchCard( city : String ,direction: String, weight: Modifier) {
+fun SearchCard(city: String, direction: String, weight: Modifier, click: () -> Unit = {}) {
     Card(
         border = BorderStroke(1.dp, BDarkWhite),
         elevation = CardDefaults.cardElevation(10.dp),
@@ -417,7 +467,8 @@ fun SearchCard( city : String ,direction: String, weight: Modifier) {
             containerColor = Color.White,
         ),
         modifier = weight
-            .height(100.dp),
+            .height(100.dp)
+            .clickable { click() },
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

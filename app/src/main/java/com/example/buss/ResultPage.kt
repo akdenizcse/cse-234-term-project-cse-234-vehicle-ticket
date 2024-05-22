@@ -1,5 +1,7 @@
 package com.example.buss
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -8,34 +10,47 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.DataSource
+import coil.request.ImageRequest
 import com.example.buss.ui.theme.BDarkWhite
 import com.example.buss.ui.theme.BLightGrey
 import com.example.buss.ui.theme.FilterColor
 
 @Composable
-fun ResultPage(pageControllerNav: NavHostController) {
+fun ResultPage(pageControllerNav: NavHostController, viewModel: MyViewModel) {
     Column {
         PageTop()
         Divider(color = BDarkWhite, thickness = 1.dp, modifier = Modifier.alpha(0.5f))
@@ -45,7 +60,7 @@ fun ResultPage(pageControllerNav: NavHostController) {
                 .alpha(0.5f)
                 .padding(top = 5.dp)
         )
-        PageBottom()
+        PageBottom(viewModel)
     }
 
 
@@ -68,6 +83,7 @@ fun Filters() {
 
 @Composable
 fun FilterCard(s: String) {
+
     Card(
         border = BorderStroke(1.dp, BDarkWhite),
         elevation = CardDefaults.cardElevation(3.dp),
@@ -76,7 +92,7 @@ fun FilterCard(s: String) {
         ),
         modifier = Modifier
             .padding(3.dp)
-            .clickable { /*TODO*/ },
+//            .clickable { Log.d("FilterCard", MyViewModel().findTripLiveData.toString()) },
     ) {
         Text(
             s,
@@ -88,22 +104,42 @@ fun FilterCard(s: String) {
     }
 }
 
+
 @Composable
-fun PageBottom() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        for (i in 1..10) {
-            ResultCard()
+fun PageBottom(viewModel: MyViewModel) {
+
+    val tripLiveData = viewModel.findTripLiveData.observeAsState().value
+
+
+    if (tripLiveData != null) {
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            items(tripLiveData.data?.trips?.size!!) { index ->
+                ResultCard(tripLiveData.data?.trips!![index])
+                Divider(
+                    color = BDarkWhite,
+                    thickness = 1.dp,
+                    modifier = Modifier
+                        .alpha(0.5f)
+                        .fillMaxWidth(0.9f)
+                )
+            }
+
         }
     }
 }
 
 @Composable
-fun ResultCard() {
+fun ResultCard(tripData: Trips) {
+    val context = LocalContext.current
+    val intent = remember { Intent(Intent.ACTION_VIEW, Uri.parse(tripData.purchaseLink)) }
+
+
+
 
     Card(
         border = BorderStroke(1.dp, BDarkWhite),
@@ -115,7 +151,9 @@ fun ResultCard() {
             .fillMaxWidth(0.9f)
             .height(125.dp)
             .padding(top = 15.dp)
-            .clickable { /*TODO*/ },
+            .clickable {
+                context.startActivity(intent)
+            },
     ) {
         Column(
             modifier = Modifier
@@ -128,40 +166,43 @@ fun ResultCard() {
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(top = 10.dp)
+                    .padding(top = 10.dp).fillMaxWidth(),
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ozsivas),
-                    contentDescription = "Ozsivas",
-                    modifier = Modifier.height(25.dp),
-                    tint = Color.Unspecified
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(tripData.busBrandLogoUrl)
+                        .build(),
+                    contentDescription = "BrandLogo",
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier.height(25.dp).weight(1f),
                 )
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f)
-                )
+
                 Text(
-                    text = "07:00",
+                    text = formatDepartureTime(tripData.departureTime!!),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center
                 )
-                Spacer(
-                    modifier = Modifier
-                        .weight(1f)
-                )
+
                 Text(
-                    text = "100 TL",
+                    text = tripData.priceTotal.toString() + " TL",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(end = 10.dp)
+                    modifier = Modifier.padding(end = 10.dp).weight(1f),
+                    textAlign = TextAlign.Right
                 )
             }
             Text(
                 modifier = Modifier
                     .weight(1f)
                     .padding(top = 10.dp),
-                text = "Kayseri -> Istanbul",
+                text = "${
+                    strMaxLeng(
+                        tripData.departureStationName!!,
+                        15
+                    )
+                } -> ${strMaxLeng(tripData.arrivalStationName!!, 10)}",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -173,7 +214,7 @@ fun ResultCard() {
                     tint = BLightGrey
                 )
                 Text(
-                    text = " 12 h 30 min",
+                    text = " ${tripData.hours}h ${tripData.minutes}m",
                     fontSize = 15.sp,
                     color = BLightGrey,
                     fontWeight = FontWeight.SemiBold
@@ -205,6 +246,15 @@ fun ResultCard() {
     }
 
 }
+
+fun strMaxLeng(input: String, maxLength: Int): String {
+    return if (input.length > maxLength) {
+        input.substring(0, maxLength)
+    } else {
+        input
+    }
+}
+
 
 @Composable
 fun PageTop() {
@@ -239,4 +289,12 @@ fun PageTop() {
             )
         }
     }
+}
+
+
+fun formatDepartureTime(departureTime: String): String {
+    departureTime.find { it == 'T' }?.let {
+        return departureTime.substring(11, 16)
+    }
+    return ""
 }
