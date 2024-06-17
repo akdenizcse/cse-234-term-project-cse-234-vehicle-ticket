@@ -64,6 +64,8 @@ fun CitySelection() {
                 focusedIndicatorColor = BNeonDarkBlue,
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
             ),
 
         )

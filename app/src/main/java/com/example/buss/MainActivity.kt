@@ -7,23 +7,27 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.buss.ui.theme.BLightBlue
 import com.example.buss.ui.theme.BussTheme
-import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
 
@@ -44,9 +48,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            var selectedDate by remember { mutableStateOf(LocalDate.now()) }
-
-
+            val pageControllerNav = rememberNavController()
+            val bottomBarState = rememberSaveable { (mutableStateOf(false)) }
 
             BussTheme {
                 // A surface container using the 'background' color from the theme
@@ -54,21 +57,74 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = Color.White
                 ) {
-                    val pageControllerNav = rememberNavController()
+                    Scaffold(
+                        bottomBar = {
+                            AnimatedVisibility(visible = bottomBarState.value) {
+                                BottomNavigationBar(
+                                    navController = pageControllerNav,
+                                    modifier = Modifier
+                                        .background(BLightBlue)
+                                        .fillMaxWidth()
+                                        .height(70.dp)
+                                        .padding(10.dp),
+                                    viewModel = viewModel,
+                                )
+                            }
+                        }
+                    ) { paddingValues ->
 
-                    val navController = rememberNavController()
-                    NavHost(navController = pageControllerNav, startDestination = "loginPage") {
-                        composable("loginPage") {
-                            LoginPage(pageControllerNav,viewModel)
-                        }
-                        composable("homePage") {
-                            Home(pageControllerNav, viewModel)
-                        }
-                        composable("resultPage") {
-                            ResultPage(pageControllerNav , viewModel)
-                        }
-                        composable("citySelection") {
-                            CitySelection()
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(bottom = paddingValues.calculateBottomPadding()),
+                        ) {
+
+                            NavHost(
+                                navController = pageControllerNav,
+                                startDestination = "loginPage"
+                            ) {
+                                composable("loginPage") {
+                                    bottomBarState.value = false
+                                    LoginPage(pageControllerNav, viewModel)
+                                }
+                                composable("homePage") {
+                                    bottomBarState.value = true
+                                    Home(pageControllerNav, viewModel)
+                                }
+                                composable("resultPage") {
+                                    bottomBarState.value = true
+                                    ResultPage(pageControllerNav, viewModel)
+                                }
+                                composable("citySelection") {
+                                    bottomBarState.value = true
+
+                                    CitySelection()
+                                }
+                                composable("provinces") {
+                                    bottomBarState.value = true
+
+                                    Provinces(viewModel, pageControllerNav)
+                                }
+                                composable("bus") {
+                                    bottomBarState.value = true
+
+                                    Bus(viewModel, pageControllerNav)
+                                }
+                                composable("provincePage") {
+                                    bottomBarState.value = true
+
+                                    ProvincePage(viewModel)
+                                }
+                                composable("busPage") {
+                                    bottomBarState.value = true
+
+                                    BusPage(viewModel)
+                                }
+                                composable("profile") {
+                                    bottomBarState.value = true
+                                    Profile(viewModel, pageControllerNav)
+                                }
+                            }
                         }
                     }
                 }

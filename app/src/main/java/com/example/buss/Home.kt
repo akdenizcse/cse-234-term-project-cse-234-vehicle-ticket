@@ -1,6 +1,7 @@
 package com.example.buss
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,12 +51,14 @@ import com.example.buss.ui.theme.BBlue
 import com.example.buss.ui.theme.BDarkWhite
 import com.example.buss.ui.theme.BLightGrey
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
 import kotlinx.coroutines.launch
@@ -87,13 +91,15 @@ fun Home(navController: NavHostController, viewModel: MyViewModel) {
     )
     {
         TopBox()
-        SearchBox(viewModel)
+        SearchBox(viewModel, navController)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchBox(viewModel: MyViewModel) {
+fun SearchBox(viewModel: MyViewModel, navController: NavHostController) {
+    //context
+    val context = LocalContext.current
     var selectedDate by remember { mutableStateOf(_selectedDate) }
 
     val todayColor = if (selectedDate == LocalDate.now()) {
@@ -277,12 +283,22 @@ fun SearchBox(viewModel: MyViewModel) {
                             dateDialogState.hide()
                             var date = "no selection"
                             if (datePickerState.selectedDateMillis != null) {
-                                _selectedDate = LocalDate.ofEpochDay(
-                                    datePickerState.selectedDateMillis!! / 86400000
-                                )
-                                selectedDate = LocalDate.ofEpochDay(
-                                    datePickerState.selectedDateMillis!! / 86400000
-                                )
+                                //if selected date is lower than today
+                                if (LocalDate.ofEpochDay(datePickerState.selectedDateMillis!! / 86400000) > LocalDate.now()) {
+                                    _selectedDate = LocalDate.ofEpochDay(
+                                        datePickerState.selectedDateMillis!! / 86400000
+                                    )
+                                    selectedDate = LocalDate.ofEpochDay(
+                                        datePickerState.selectedDateMillis!! / 86400000
+                                    )
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Please select a date after today",
+                                        Toast.LENGTH_SHORT,
+
+                                        ).show()
+                                }
                             }
 
                         },
@@ -313,14 +329,14 @@ fun SearchBox(viewModel: MyViewModel) {
 
 
 
-        RecommendationCards()
+        RecommendationCards(viewModel, navController)
 
 
     }
 }
 
 @Composable
-fun RecommendationCards() {
+fun RecommendationCards(viewModel: MyViewModel, navController: NavHostController) {
 
     Spacer(modifier = Modifier.height(15.dp))
 
@@ -330,23 +346,54 @@ fun RecommendationCards() {
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold
     )
-    Spacer(modifier = Modifier.height(10.dp))
+    val response = MyViewModel().allCitiesLiveData.observeAsState().value
 
-    ImageCard("Istanbul", R.drawable.istanbul)
-    Spacer(modifier = Modifier.height(10.dp))
-    ImageCard(cityName = "Antalya", imageResId = R.drawable.antalya)
-    Spacer(modifier = Modifier.height(10.dp))
-    ImageCard(cityName = "Ankara", imageResId = R.drawable.ankara)
-    Spacer(modifier = Modifier.height(10.dp))
-    ImageCard(cityName = "Izmir", imageResId = R.drawable.izmir)
-    Spacer(modifier = Modifier.height(10.dp))
-    ImageCard(cityName = "Bursa", imageResId = R.drawable.bursa)
+    if (response != null) {
+        Column(modifier = Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
 
+            //increase index +5
+            for (index in 15 until 45 step 7) {
+                CityCard(response.data!![index], onClick = {
+                    viewModel.selectedCity = response.data!![index]
+                    navController.navigate("provincePage")
+                })
+
+            }
+
+
+        }
+    }
 }
 
 
+//    Spacer(modifier = Modifier.height(10.dp))
+//
+//    Spacer(modifier = Modifier.height(10.dp))
+//    ImageCard(cityName = "Antalya", imageResId = R.drawable.antalya, onclick = {
+//        viewModel.selectedCity = response?.data!!.find { it.name == "antalya" }!!
+//        navController.navigate("provincePage")
+//    })
+//    Spacer(modifier = Modifier.height(10.dp))
+//    ImageCard(cityName = "Ankara", imageResId = R.drawable.ankara, onclick = {
+//        viewModel.selectedCity = response?.data!!.find { it.name == "ankara" }!!
+//        navController.navigate("provincePage")
+//    })
+//    Spacer(modifier = Modifier.height(10.dp))
+//    ImageCard(cityName = "Izmir", imageResId = R.drawable.izmir, onclick = {
+//        viewModel.selectedCity = response?.data!!.find { it.name == "izmir" }!!
+//        navController.navigate("provincePage")
+//    })
+//    Spacer(modifier = Modifier.height(10.dp))
+//    ImageCard(cityName = "Bursa", imageResId = R.drawable.bursa, onclick = {
+//        viewModel.selectedCity = response?.data!!.find { it.name == "bursa" }!!
+//        navController.navigate("provincePage")
+//    })
+
+
+
+
 @Composable
-fun ImageCard(cityName: String, imageResId: Int) {
+fun ImageCard(cityName: String, imageResId: Int, onclick: () -> Unit = {}) {
 
     Box(
         modifier = Modifier
@@ -354,7 +401,8 @@ fun ImageCard(cityName: String, imageResId: Int) {
             .aspectRatio(16f / 9f)
             .background(Color.White)
             .padding(8.dp)
-            .clip(RoundedCornerShape(10.dp)),
+            .clip(RoundedCornerShape(10.dp))
+            .clickable { onclick() },
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -410,7 +458,6 @@ fun SearchButton(viewModel: MyViewModel) {
                 )
                 pageControllerNav.value?.navigate("resultPage")
             }
-
 
 
         },

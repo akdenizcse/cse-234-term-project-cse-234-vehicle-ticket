@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -88,13 +90,6 @@ fun LoginPage(pageNav: NavHostController, viewModel: MyViewModel) {
             }
         }
     }
-
-//    val viewModel = remember { MyViewModel() }
-//    LaunchedEffect(Unit) {
-//        viewModel.authenticate("cvassi@example.com", "Cvas1.")
-//        Log.d("Login", MyViewModel().authResponseLiveData.value.toString())
-//    }
-
 
 }
 
@@ -217,6 +212,9 @@ fun Login(
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
 
+    var emailBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+    var passwordBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+
 
 
 
@@ -230,19 +228,24 @@ fun Login(
     ) {
 
         TextInput(
-            "Username",
+            "Email",
             email.value,
-            onValueChange = { email.value = it },
+            onValueChange = { email.value = it
+                            emailBorderColor = if ( android.util.Patterns.EMAIL_ADDRESS.matcher(email.value).matches()) BNeonDarkBlue else Color.Red},
             InputType.Name,
             keyboardActions = KeyboardActions(onNext = {
                 passwordFocusRequester.requestFocus()
             }),
+            borderColor = emailBorderColor
         )
 
 
         TextInput(
             "Password",
-            password.value, onValueChange = { password.value = it },
+            password.value, onValueChange = { password.value = it
+                                            passwordBorderColor = if (password.value.length >= 6 &&
+                                password.value.any { it.isUpperCase() } &&
+                                password.value.any { it.isDigit() }) BNeonDarkBlue else Color.Red},
             InputType.Password,
             keyboardActions = KeyboardActions(onDone = {
                 focusManager.clearFocus()
@@ -252,6 +255,7 @@ fun Login(
 
             }),
             focusRequester = passwordFocusRequester,
+            borderColor = passwordBorderColor
         )
 
 
@@ -264,12 +268,18 @@ fun Login(
                     Text(
                         "Continue without signing up.",
                         color = BLightGrey,
-                        textAlign = TextAlign.Left
+                        textAlign = TextAlign.Left,
+                        fontSize = 13.sp
                     )
                 }
             }
             TextButton(onClick = {}) {
-                Text("Forgot Password?", color = BBlue, textAlign = TextAlign.Right)
+                Text(
+                    "Forgot Password?",
+                    color = BBlue,
+                    textAlign = TextAlign.Right,
+                    fontSize = 13.sp
+                )
             }
         }
         Button(
@@ -350,19 +360,34 @@ fun SignUp(
     val firstName = remember { mutableStateOf("") }
     val lastName = remember { mutableStateOf("") }
 
+
+    var lastNameBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+    var firstNameBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+    var usernameBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+    var emailBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+    var passwordBorderColor by remember { mutableStateOf(BNeonDarkBlue) }
+
+//
+//    val isSignUpButtonEnabled = isPasswordValid && isEmailValid && isUsernameValid && isFirstNameValid && isLastNameValid
+//
+//    val signUpButtonColor = if (isSignUpButtonEnabled) BNeonDarkBlue else BBlackLight
+
     val response = viewModel._registerResponse.collectAsState()
 
-   when(response.value){
-         is RegisterResponse -> {
-              if(response.value.succeeded){
-                  Log.d("Register", response.toString())
 
-                  val browserIntent =
-                      Intent(Intent.ACTION_VIEW, Uri.parse(extractUrl(response.value.message!!)))
 
-                  context.startActivity(browserIntent)
-              }
-         }
+    when (response.value) {
+        is RegisterResponse -> {
+            if (response.value.succeeded) {
+                Log.d("Register", response.toString())
+
+                Toast.makeText(context, "Registration successful. Please confirm your email adress!", Toast.LENGTH_LONG).show()
+//                val browserIntent =
+//                    Intent(Intent.ACTION_VIEW, Uri.parse(extractUrl(response.value.message!!)))
+//
+//                context.startActivity(browserIntent)
+            }
+        }
     }
 
 
@@ -377,42 +402,55 @@ fun SignUp(
         TextInput(
             "First Name",
             firstName.value,
-            onValueChange = { firstName.value = it },
+            onValueChange = {
+                firstName.value = it
+                firstNameBorderColor = if (firstName.value.length >= 6) BNeonDarkBlue else Color.Red
+            },
             InputType.Name,
             keyboardActions = KeyboardActions(onNext = {
                 passwordFocusRequester.requestFocus()
-            })
+            }),
+            borderColor = firstNameBorderColor
         )
         TextInput(
             "Last Name",
             lastName.value,
-            onValueChange = { lastName.value = it },
+            onValueChange = { lastName.value = it
+                            lastNameBorderColor = if (lastName.value.length >= 6) BNeonDarkBlue else Color.Red},
             InputType.Name,
             keyboardActions = KeyboardActions(onNext = {
                 passwordFocusRequester.requestFocus()
-            })
+            }),
+            borderColor = lastNameBorderColor
         )
         TextInput(
             "Username",
             username.value,
-            onValueChange = { username.value = it },
+            onValueChange = { username.value = it
+                            usernameBorderColor = if ( username.value.length >= 6) BNeonDarkBlue else Color.Red},
             InputType.Name,
             keyboardActions = KeyboardActions(onNext = {
                 passwordFocusRequester.requestFocus()
-            })
+            }),
+            borderColor = usernameBorderColor
         )
         TextInput(
             "Email",
             email.value,
-            onValueChange = { email.value = it },
+            onValueChange = { email.value = it
+                            emailBorderColor = if ( android.util.Patterns.EMAIL_ADDRESS.matcher(email.value).matches()) BNeonDarkBlue else Color.Red},
             InputType.Name,
             keyboardActions = KeyboardActions(onNext = {
                 passwordFocusRequester.requestFocus()
-            })
+            }),
+            borderColor = emailBorderColor
         )
         TextInput(
             "Password", password.value,
-            onValueChange = { password.value = it },
+            onValueChange = { password.value = it
+                            passwordBorderColor = if (password.value.length >= 6 &&
+                                password.value.any { it.isUpperCase() } &&
+                                password.value.any { it.isDigit() }) BNeonDarkBlue else Color.Red},
             InputType.Password,
             keyboardActions = KeyboardActions(onDone = {
                 focusManager.clearFocus()
@@ -430,7 +468,8 @@ fun SignUp(
 
 
             }),
-            focusRequester = passwordFocusRequester
+            focusRequester = passwordFocusRequester,
+            borderColor = passwordBorderColor
         )
         Button(
             onClick = {
@@ -443,6 +482,7 @@ fun SignUp(
                         password.value,
                         password.value
                     )
+
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -455,12 +495,14 @@ fun SignUp(
 }
 
 private fun extractUrl(message: String): String? {
-    if(message == null) return null
-    val prefix = "file://"
+    if (message == null) return null
+    val prefix = "https://"
     val startIndex = message.indexOf(prefix)
-    Log.d("3111", "https://api.buscanner.tech" + message.substring(startIndex + prefix.length))
     return if (startIndex != -1) {
-        "https://api.buscanner.tech" + message.substring(startIndex + prefix.length, message.length - 1)
+        "https://" + message.substring(
+            startIndex + prefix.length,
+            message.length - 1
+        )
     } else {
         null
     }
@@ -497,29 +539,33 @@ fun TextInput(
     onValueChange: (String) -> Unit,
     inputType: InputType,
     focusRequester: FocusRequester? = null,
-    keyboardActions: KeyboardActions
+    keyboardActions: KeyboardActions,
+    borderColor: Color = BLightGrey
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(focusRequester ?: FocusRequester())
             .height(60.dp),
         //leadingIcon = { Icon(imageVector = inputType.icon, null) },
-        label = { Text(text = inputType.label, fontWeight = FontWeight.Medium) },
+        label = { Text(text = name, fontWeight = FontWeight.Medium) },
         shape = RoundedCornerShape(10.dp),
         colors = TextFieldDefaults.colors(
             focusedLeadingIconColor = BLightGrey,
             unfocusedLeadingIconColor = BLightGrey,
-            focusedLabelColor = BNeonDarkBlue,
+            focusedLabelColor = borderColor,
             unfocusedLabelColor = BLightGrey,
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
-            focusedIndicatorColor = BNeonDarkBlue,
+            focusedIndicatorColor = borderColor,
             unfocusedIndicatorColor = BLightGrey,
             unfocusedPlaceholderColor = BLightGrey,
-            cursorColor = BNeonDarkBlue
+            cursorColor = BNeonDarkBlue,
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
         ),
         singleLine = true,
         keyboardOptions = inputType.keyboardOptions,

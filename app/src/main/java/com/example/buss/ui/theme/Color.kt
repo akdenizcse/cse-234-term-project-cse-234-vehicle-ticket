@@ -11,7 +11,7 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val BDarkBlue = Color(0xFF054A99)
-val BLightBlue= Color(0xFFA1C5FF)
+val BLightBlue= Color(0xFFE2EDF2)
 val BCyan = Color(0xFF36B2A7)
 val BBlue = Color(0xFF0772E3)
 val BDarkGrey = Color(0xFF37353C)
